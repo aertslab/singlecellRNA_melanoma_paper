@@ -1,0 +1,91 @@
+# Load Packages
+
+```{r}
+library(dplyr)
+library(car)
+library(ComplexHeatmap)
+```
+
+# Functions
+
+```{r}
+source("functions.R")
+```
+
+# Data
+
+```
+scenic.genes<-row.names(get(x = load("/ddn1/vol1/staging/leuven/stg_00002/lcb/zkalender/scRNA_seq_melanoma/analysis_40k/20.analysis_with_sub_matrices/1.three_MM_lines_SOX/30.SCENIC/int/1.1_exprMatrix_filtered.RData")))
+rm(log_CPM)
+```
+
+```{r}
+# The given file is generated using the script in Melanoma_Fig4f_Trajectory_Alignment_Scripts.md 
+three.MM.lines.DC.alignment<-readRDS("three_MM_lines_DC_alignment.rds.gz")
+```
+
+# Fitting (Logit) Half-life
+
+MM057, MM074, MM087
+
+```{r}
+# MM057
+threeMMLines.MM057.interScaledGeneExpr.logit<-get_fitted_logit_half_life(x = three.MM.lines.DC.alignment$MM057$cellAlign.inter.global.scaled$scaledData, traj = three.MM.lines.DC.alignment$MM057$cellAlign.inter.global.scaled$traj)
+# MM074
+threeMMLines.MM074.interScaledGeneExpr.logit<-get_fitted_logit_half_life(x = three.MM.lines.DC.alignment$MM074$cellAlign.inter.global.scaled$scaledData, traj = three.MM.lines.DC.alignment$MM074$cellAlign.inter.global.scaled$traj)
+# MM087
+threeMMLines.MM087.interScaledGeneExpr.logit<-get_fitted_logit_half_life(x = three.MM.lines.DC.alignment$MM087$cellAlign.inter.global.scaled$scaledData, traj = three.MM.lines.DC.alignment$MM087$cellAlign.inter.global.scaled$traj)
+```
+
+```
+logit.model.genes<-intersect(
+    x = names(threeMMLines.MM057.interScaledGeneExpr.logit$logit.model.half.life),
+    y = intersect(
+        x = names(threeMMLines.MM074.interScaledGeneExpr.logit$logit.model.half.life),
+        y = names(threeMMLines.MM087.interScaledGeneExpr.logit$logit.model.half.life)
+    ))
+```
+
+# Generate Heatmaps
+
+Save heatmaps (SCENIC genes),
+
+```{r}
+scenic.logit.model.genes<-logit.model.genes[logit.model.genes%in%scenic.genes]
+three.MM.lines.DC.alignment$scenic.logit.model.genes<-scenic.logit.model.genes
+
+# sort by MM057 Logit Fitted Half-life
+threeMMLines.MM057.interScaledGeneExpr.SCENICGenes.sortedByMM057LogitFittedHalfLife<-save_inter_gene_expr_heatmap(
+    x = three.MM.lines.DC.alignment$MM057$cellAlign.inter.global.scaled$scaledData,
+    genes = scenic.logit.model.genes,
+    metric = threeMMLines.MM057.interScaledGeneExpr.logit$logit.model.half.life, 
+    file.name = "out/heatmaps/threeMMLines_MM057_interScaledGeneExpr_SCENICGenes_sortedByMM057LogitFittedHalfLife.png")
+threeMMLines.MM074.interScaledGeneExpr.SCENICGenes.sortedByMM057LogitFittedHalfLife<-save_inter_gene_expr_heatmap(
+    x = three.MM.lines.DC.alignment$MM074$cellAlign.inter.global.scaled$scaledData, 
+    genes = scenic.logit.model.genes, 
+    metric = threeMMLines.MM057.interScaledGeneExpr.logit$logit.model.half.life, 
+    file.name = "out/heatmaps/threeMMLines_MM074_interScaledGeneExpr_SCENICGenes_sortedByMM057LogitFittedHalfLife.png")
+threeMMLines.MM087.interScaledGeneExpr.SCENICGenes.sortedByMM057LogitFittedHalfLife<-save_inter_gene_expr_heatmap(
+    x = three.MM.lines.DC.alignment$MM087$cellAlign.inter.global.scaled$scaledData,
+    genes = scenic.logit.model.genes,
+    metric = threeMMLines.MM057.interScaledGeneExpr.logit$logit.model.half.life,
+    file.name = "out/heatmaps/threeMMLines_MM087_interScaledGeneExpr_SCENICGenes_sortedByMM057LogitFittedHalfLife.png")
+
+# sort by MM074 Logit Fitted Half-life
+threeMMLines.MM074.interScaledGeneExpr.SCENICGenes.sortedByMM074LogitFittedHalfLife<-save_inter_gene_expr_heatmap(x = three.MM.lines.DC.alignment$MM074$cellAlign.inter.global.scaled$scaledData,
+genes = scenic.logit.model.genes,
+metric = threeMMLines.MM074.interScaledGeneExpr.logit$logit.model.half.life,
+file.name = "out/heatmaps/threeMMLines_MM074_interScaledGeneExpr_SCENICGenes_sortedByMM074LogitFittedHalfLife.png")
+
+# sort by MM087 Logit Fitted Half-life
+threeMMLines.MM087.interScaledGeneExpr.SCENICGenes.sortedByMM087LogitFittedHalfLife<-save_inter_gene_expr_heatmap(x = three.MM.lines.DC.alignment$MM087$cellAlign.inter.global.scaled$scaledData,
+genes = scenic.logit.model.genes,
+metric = threeMMLines.MM087.interScaledGeneExpr.logit$logit.model.half.life,
+file.name = "out/heatmaps/threeMMLines_MM087_interScaledGeneExpr_SCENICGenes_sortedByMM087LogitFittedHalfLife.png")
+
+dim(threeMMLines.MM057.interScaledGeneExpr.SCENICGenes.sortedByMM057LogitFittedHalfLife)
+dim(threeMMLines.MM074.interScaledGeneExpr.SCENICGenes.sortedByMM057LogitFittedHalfLife)
+dim(threeMMLines.MM087.interScaledGeneExpr.SCENICGenes.sortedByMM057LogitFittedHalfLife)
+dim(threeMMLines.MM074.interScaledGeneExpr.SCENICGenes.sortedByMM074LogitFittedHalfLife)
+dim(threeMMLines.MM087.interScaledGeneExpr.SCENICGenes.sortedByMM087LogitFittedHalfLife)
+```
