@@ -1,0 +1,71 @@
+setwd("/media/data/lcb/zkalender/demuxlet_on_HiSeq4000_20171123")
+
+# Mix_MM_57_74_87_SOX10_24h
+barcodes<-read.delim(file="Mix_MM_57_74_87_SOX10_24h_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="Mix_MM_57_74_87_SOX10_24h_demuxlet_output.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="Mix_MM_57_74_87_SOX10_24h_demux_best_predictions.RData",demux_best_predictions)
+
+# Mix_MM_57_74_87_SOX10_48h
+barcodes<-read.delim(file="Mix_MM_57_74_87_SOX10_48h_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="Mix_MM_57_74_87_SOX10_48h_demuxlet_output.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="Mix_MM_57_74_87_SOX10_48h_demux_best_predictions.RData",demux_best_predictions)
+
+# Mix_MM_lines_TGF_only
+barcodes<-read.delim(file="Mix_MM_lines_TGF_only_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="Mix_MM_lines_TGF_only_demuxlet_output.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="Mix_MM_lines_TGF_only_demux_best_predictions.RData",demux_best_predictions)
+
+# Mix_MM_lines_TGF_TNF
+barcodes<-read.delim(file="Mix_MM_lines_TGF_TNF_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="Mix_MM_lines_TGF_TNF_demuxlet_output.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="Mix_MM_lines_TGF_TNF_demux_best_predictions.RData",demux_best_predictions)
+
+# Mix_MM_lines (baseline)
+barcodes<-read.delim(file="/media/data/lcb/zkalender/Mix_MM_lines/demuxlet_analysis/MixMMlines_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="demuxlet_output_with_10_samples.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="Mix_MM_lines_demux_best_prediction.RData",demux_best_predictions)
+
+# MM057siNTC_MM074_siNTC
+barcodes<-read.delim(file="/media/data/lcb/zkalender/demuxlet_on_HiSeq4000_20171123/MM057siNTC_MM074_siNTC_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="MM057siNTC_MM074_siNTC_cosorted.bam_demuxlet_output.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="MM057siNTC_MM074_siNTC_demux_best_prediction.RData",demux_best_predictions)
+
+# MM057siNTC_MM074_siNTC_5
+barcodes<-read.delim(file="/media/data/lcb/zkalender/demuxlet_on_HiSeq4000_20171123/MM057siNTC_MM074_siNTC_5_barcodes",header=F)
+barcodes$V1<-gsub("-1",'',barcodes$V1)
+demux_best_predictions<-read.delim(file="MM057siNTC_MM074_siNTC_5_cosorted.bam_demuxlet_output.best")
+demux_best_predictions<-subset(demux_best_predictions,select=c("BARCODE","SNG.1ST"))
+demux_best_predictions$BARCODE<-gsub("-1",'',demux_best_predictions$BARCODE)
+demux_best_predictions$SNG.1ST<-gsub("RNAseq_",'',demux_best_predictions$SNG.1ST)
+demux_best_predictions <- subset(demux_best_predictions, BARCODE %in% barcodes$V1)
+save(file="MM057siNTC_MM074_siNTC_5_demux_best_prediction.RData",demux_best_predictions)

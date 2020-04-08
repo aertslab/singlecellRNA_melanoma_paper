@@ -1,0 +1,263 @@
+---
+title: "Bulk RNAseq"
+---
+
+# setup
+```{r}
+library(DESeq2)
+library(qusage)
+library(dplyr)
+library(ggrepel)
+library(AUCell)
+library(GSEABase)
+```
+
+```{r}
+New_MMlines <- read.delim(file="/media/lcb1/lcb/jwout/Data_Analyses/Data/HiSeq4000s_20170517_and_20170609/RNA-seq.counts")
+colnames(New_MMlines)
+
+coldesign<-data.frame(c("MM001", "MEL501", "SKMEL28", "MM029", "MM031", "MM032", "MM034", "MM043", "MM050","MM054", "MM057", "MM070", "MM074", "MM087", "MM094", "MM098", "MM099", "MM116", "MM118", "MM125", "MM129", "MM131", "MM142", "MM146", "MM147", "MM148", "MM150", "MM152", "MM161", "MM163", "MM164", "MM165", "MM168"))
+
+colnames(coldesign)<-"Design"
+Design<-coldesign$Design
+coldesign
+dds_New_MMlines <-DESeqDataSetFromMatrix(countData=New_MMlines, colData=coldesign , design= ~Design)
+dds_New_MMlines <-DESeq(dds_New_MMlines)
+
+norm_matrix_deseq_dds_New_MMlines <- counts(dds_New_MMlines,normalized=T)
+#save(norm_matrix_deseq_dds_New_MMlines, file= "norm_matrix_deseq_dds_New_MMlines.RData")
+#write.table(norm_matrix_deseq_dds_New_MMlines, file="norm_matrix_deseq_dds_New_MMlines_norm_matrix.txt", sep="\t", quote=F)
+```
+
+###
+# compare to Hoek cohort B:
+# strategy: take same 221 genes as used in Hoek et al 2006 for clustering MM lines in cohort A, C en an intermediate cohort B
+# see whether our intermediate lines are clustered in the middle
+###
+
+```{r}
+genes_intermediate_other <- read.gmt("intermediate_states.gmt")
+genes_cohort_B <- genes_intermediate_other$Hoek_cohort_B
+
+cols_for_heatmap_all <- c("blue", "grey", "grey", "darkorange", "blue", "grey", "grey", rep("grey", 3), "darkorchid4", "grey", "darkorchid4", "darkorchid4", "grey", "grey", "darkorange", "grey", "grey", rep("grey", 14))
+
+names(cols_for_heatmap_all) <- c("MM001", "MEL501", "SKMEL28", "MM029", "MM031", "MM032", "MM034", "MM043", "MM050", "MM054", "MM057", "MM070", "MM074", "MM087", "MM094", "MM098", "MM099", "MM116", "MM118", "MM125", "MM129", "MM131", "MM142", "MM146", "MM147", "MM148", "MM150", "MM152", "MM161", "MM163", "MM164", "MM165", "MM168")
+
+norm_matrix_deseq_dds_New_MMlines_Log2 <- log2(norm_matrix_deseq_dds_New_MMlines+1)
+rowmed <- apply(norm_matrix_deseq_dds_New_MMlines_Log2,1,median)
+norm_matrix_deseq_dds_New_MMlines_Log2_Median_center_Row <- sweep(norm_matrix_deseq_dds_New_MMlines_Log2,1,rowmed,"-")
+#write.table(norm_matrix_deseq_dds_New_MMlines_Log2_Median_center_Row, file="norm_matrix_deseq_dds_New_MMlines_Log2_Median_center_Row.txt", sep="\t", quote=F)
+#save(norm_matrix_deseq_dds_New_MMlines_Log2_Median_center_Row, file= "norm_matrix_deseq_dds_New_MMlines_Log2_Median_center_Row.RData")
+
+plotten <- norm_matrix_deseq_dds_New_MMlines_Log2_Median_center_Row[genes_cohort_B,]
+plotten
+dim(plotten)
+f = colorRamp2(c(-3,0,3), c("blue", "#EEEEEE", "red"))
+df1 <- as.data.frame(colnames(plotten))
+dim(df1)
+colnames(df1) <- "MM_line"
+df1
+column_ha = HeatmapAnnotation(df = df1, col = list(MM_line = cols_for_heatmap_all), show_legend = F)
+
+ht = Heatmap(plotten, col = f, name = "Gene expression", cluster_columns = T, cluster_rows = T, column_dend_reorder = F, show_column_names = TRUE, show_row_names = F, top_annotation = column_ha)
+
+pdf(file = "New_MM_lines_cohort_B_no_rownames.pdf", width = 12, height = 12)
+draw(ht)
+dev.off()
+```
+
+##### compare all MM lines to all Tsoi subgroups
+##### calculate regulon activity scores for all MM lines
+
+```{r}
+
+norm_matrix_deseq_dds_New_MMlines_Log2_ALL <- norm_matrix_deseq_dds_New_MMlines_Log2
+exprMatrix <- as.matrix(norm_matrix_deseq_dds_New_MMlines_Log2_ALL)
+
+###the genesets:
+gmt_paper <- read.gmt("scRNA_paper_20200123.gmt") #regulons for later
+intermediate <- read.gmt("Other_intermediate_signatures_Tsoi_Rambow.gmt")
+
+geneSets <- c(gmt_paper, intermediate)
+
+geneSets_expressed_genes <- list()
+for (set in names(geneSets)){
+  print(set)
+  geneSets_expressed_genes[[set]] <- geneSets[[set]][(geneSets[[set]])%in% rownames(exprMatrix)]
+  
+}
+
+###gene expression rankings
+set.seed(123)
+cells_rankings <- AUCell_buildRankings(exprMatrix, nCores=10, plotStats=TRUE)
+#save(cells_rankings, file="AUCell_cell_rankings_All_New_MMlines.RData")
+
+###calculate enrichment of gene signatures
+cells_AUC <- AUCell_calcAUC(geneSets_expressed_genes, cells_rankings, nCores = 10)
+#save(cells_AUC, file="AUCell_cells_ALL_New_MMlines_genesets_other_INT_regulons.RData")
+
+New_MMlines_ALL_AUCell <- as.data.frame(cells_AUC@assays$data$AUC)
+
+####
+##Tsoi
+####
+
+rownames(New_MMlines_ALL_AUCell)
+plotten <- New_MMlines_ALL_AUCell[c("Tsoi_Undifferentiated-specific", "Tsoi_Neural Crest-specific", "Tsoi_Transitory-specific", "Tsoi_Melanocytic-specific"),]
+
+zscore <- function(x) {
+        #first calculate row (1) means, then subtract mean ("-")
+        y <- sweep(x, 1, apply(x, 1, mean), "-")
+        #then calculate row standard deviation and devide ("/") by sd
+        sweep(y, 1, apply(x, 1, sd), "/")}
+
+t(apply(plotten, 1, range))
+plotten_scaled <- zscore(plotten)
+t(apply(plotten_scaled, 1, range))
+
+f = colorRamp2(seq(quantile(unlist(plotten_scaled), 0.05), quantile(unlist(plotten_scaled), 0.95), length = 3), c("blue", "#EEEEEE", "red"))
+
+df <- as.data.frame(colnames(plotten_scaled))
+dim(df)
+colnames(df) <-  "MM_line"
+ha = HeatmapAnnotation(df = df, col = list(MM_line = cols_for_heatmap_all))
+ht = Heatmap(plotten_scaled, col = f, name = "AUCell", cluster_columns = TRUE, cluster_rows = TRUE, show_column_names = T, row_names_gp = gpar(fontsize = 10), column_title_side = "bottom", column_names_gp = gpar(fontsize = 10), column_title_rot = 90, top_annotation = ha)
+
+pdf(file = "All_New_MM_lines_Tsoi_groups_Blue_white_red_zScored.pdf", width = 12, height = 12)
+draw(ht)
+dev.off()
+
+#####
+##regulons heatmap
+######
+
+plotten <- New_MMlines_ALL_AUCell[c("SOX10", "SOX10_track", "TFAP2A", "MITF", "MITF_track", "IRF4", "USF2", "BHLHE41", "HES6", "EGR3", "SOX6", "SOX6_track", "NFATC2", "ELF1", "ELF1_track", "ETV4", "ETV4_track", "JUN", "JUN_track", "SOX9", "NR3C1_track", "IRF1", "IRF1_track", "FOSL2", "FOSL2_track", "ATF5", "NFIB", "FOSL1", "FOSL1_track", "IRF3", "STAT1", "STAT1_track", "ZEB1", "ZEB1_track", "ATF4", "ATF4_track", "SOX4", "MYC", "MYC_track", "TFAP2B", "SOX11", "MYLK", "GATA3", "GATA3_track", "E2F1", "E2F1_track", "MYBL2", "MYBL2_track", "RAD21"),]
+
+t(apply(plotten, 1, range))
+plotten_scaled <- zscore(plotten)
+t(apply(plotten_scaled, 1, range))
+
+f = colorRamp2(seq(quantile(unlist(plotten_scaled), 0.05), quantile(unlist(plotten_scaled), 0.95), length = 3), c("blue", "#EEEEEE", "red"))
+
+df <- as.data.frame(colnames(plotten_scaled))
+dim(df)
+colnames(df) <-  "MM_line"
+ha = HeatmapAnnotation(df = df, col = list(MM_line = cols_for_heatmap_all))
+
+ht = Heatmap(plotten_scaled, col = f, name = "AUCell", cluster_columns = F, cluster_rows = F, show_column_names = T, row_names_gp = gpar(fontsize = 10), column_title_side = "bottom", column_names_gp = gpar(fontsize = 10), column_title_rot = 90, top_annotation = ha, column_dend_reorder = F)
+
+pdf(file = "All_New_MM_lines_Regulons_BLs_ZScored.pdf", width = 12, height = 12)
+draw(ht)
+dev.off()
+```
+
+#####
+# compare melanocytic MM lines (n=17) to other intermediate cultures
+######
+
+```{r}
+New_MMlines_proliferative <- New_MMlines[,c("MM001", "MEL501", "SKMEL28","MM031", "MM034", "MM043", "MM057", "MM070", "MM074", "MM087", "MM094", "MM098", "MM118", "MM125", "MM161", "MM164", "MM168")]
+dim(New_MMlines_proliferative)
+
+coldesign<-data.frame(rep("MM_line", 17))
+colnames(coldesign)<-"Design"
+Design<-coldesign$Design
+coldesign
+dds_New_MMlines_proliferative <-DESeqDataSetFromMatrix(countData=New_MMlines_proliferative_only_not_PCA, colData=coldesign , design= ~1)
+keep <- rowSums(counts(dds_New_MMlines_proliferative)) >= 10
+dds_New_MMlines_proliferative_prefiltered <- dds_New_MMlines_proliferative[keep,]
+
+dds_New_MMlines_proliferative_prefiltered <-DESeq(dds_New_MMlines_proliferative_prefiltered)
+#save(dds_New_MMlines_proliferative_prefiltered, file="dds_New_MMlines_proliferative_prefiltered.RData")
+
+norm_matrix_New_MMlines_proliferative_prefiltered <- counts(dds_New_MMlines_proliferative_prefiltered,normalized=T)
+dim(norm_matrix_New_MMlines_proliferative_prefiltered)
+#save(norm_matrix_New_MMlines_proliferative_prefiltered, file= "norm_matrix_New_MMlines_proliferative_prefiltered.RData")
+#write.table(norm_matrix_New_MMlines_proliferative_prefiltered, file="norm_matrix_New_MMlines_proliferative_prefiltered.txt", sep="\t", quote=F)
+
+norm_matrix_New_MMlines_proliferative_prefiltered_Log2 <- log2(norm_matrix_New_MMlines_proliferative_prefiltered+1)
+dim(norm_matrix_New_MMlines_proliferative_prefiltered_Log2)
+
+exprMatrix <- as.matrix(norm_matrix_New_MMlines_proliferative_prefiltered_Log2)
+
+###the genesets
+intermediate <- read.gmt("Other_intermediate_signatures_Tsoi_Rambow_2.gmt")
+geneSets <- c(intermediate)
+
+geneSets_expressed_genes <- list()
+for (set in names(geneSets)){
+  print(set)
+  geneSets_expressed_genes[[set]] <- geneSets[[set]][(geneSets[[set]])%in% rownames(exprMatrix)]
+}
+
+##gene expression rankings
+set.seed(123)
+cells_rankings <- AUCell_buildRankings(exprMatrix, nCores=10, plotStats=TRUE)
+#save(cells_rankings, file="AUCell_cell_rankings_New_MMlines_MEL.RData")
+
+cells_AUC <- AUCell_calcAUC(geneSets_expressed_genes, cells_rankings, nCores = 10)
+#save(cells_AUC, file="AUCell_cells_New_MMlines_MEL_genesets.RData")
+
+New_MMlines_MEL_AUCell <- as.data.frame(cells_AUC@assays$data$AUC)
+
+#####
+##order according intermediate signature
+######
+
+plotten <- New_MMlines_MEL_AUCell
+
+cols_for_heatmap_mel <- c("blue", "grey", "grey","blue", "grey", "grey", "grey", "darkorchid4", "grey", "darkorchid4", "darkorchid4", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey")
+names(cols_for_heatmap_mel) <- c("MM001", "MEL501", "SKMEL28","MM031", "MM034", "MM043", "MM050", "MM057", "MM070", "MM074", "MM087", "MM094", "MM098", "MM118", "MM125", "MM147", "MM150", "MM161", "MM164", "MM168")
+
+#rescalen naar 0-1
+
+plotten_scaled <- sweep(plotten, 1, apply(plotten, 1, min), "-")
+plotten_scaled <- sweep(plotten_scaled, 1, apply(plotten_scaled, 1, max), "/")
+t(apply(plotten_scaled, 1, range))
+
+##order based on INT_cell_state
+plotten_scaled_t <- as.data.frame(t(plotten_scaled))
+t_plotten_scaled_INT_order <- plotten_scaled_t[order(plotten_scaled_t$INT_cell_state), , drop = FALSE]
+plotten_scaled_INT_order <- as.data.frame(t(t_plotten_scaled_INT_order))
+
+##with other INT signatures Rambow and tsoi
+plotten_scaled_INT_order
+rownames(plotten_scaled_INT_order)
+
+plotten_scaled_INT_order_rows_reordered <- plotten_scaled_INT_order[c("INT_cell_state", "Tsoi_Transitory-specific", "Rambow_SMC"),]
+
+df <- as.data.frame(colnames(plotten_scaled_INT_order_rows_reordered))
+dim(df)
+colnames(df) <-  "MM_line"
+ha = HeatmapAnnotation(df = df, col = list(MM_line = cols_for_heatmap_mel))
+
+# 95 percentile of the data:
+f = colorRamp2(seq(min(plotten_scaled_INT_order_rows_reordered), quantile(unlist(plotten_scaled_INT_order_rows_reordered), 0.95), length = 2), c("#EEEEEE", "red"))
+
+ht = Heatmap(plotten_scaled_INT_order_rows_reordered, col = f, name = "AUCell", cluster_columns = F, cluster_rows = F, show_column_names = T, row_names_gp = gpar(fontsize = 10), column_title_side = "bottom", column_names_gp = gpar(fontsize = 10), column_title_rot = 90, top_annotation = ha)
+
+pdf(file = "New_MM_lines_MEL_heatmap_AUCell_ordered_by_INT_other_INT_signatures.pdf", width = 14, height = 14)
+draw(ht)
+dev.off()
+
+#####checking correlations of these
+intermediate_for_correlations <- as.data.frame(t(plotten_scaled_INT_order))
+colnames(intermediate_for_correlations)
+
+#http://www.sthda.com/english/wiki/ggplot2-scatter-plots-quick-start-guide-r-software-and-data-visualization
+
+  pdf(file = "Correlation_our_int_and_others.pdf", paper = "a4")
+ggplot(intermediate_for_correlations, aes(x=INT_cell_state, y=`Tsoi_Transitory-specific`)) +
+  geom_point(color = cols_for_heatmap_mel[rownames(intermediate_for_correlations)]) + 
+  geom_text_repel(label=rownames(intermediate_for_correlations), color = cols_for_heatmap_mel[rownames(intermediate_for_correlations)]) +
+  geom_smooth(method=lm, linetype="dashed", color="black", alpha=0.1, size=0.5, fullrange=TRUE) +
+  stat_cor(method = "spearman")
+
+ggplot(intermediate_for_correlations, aes(x=INT_cell_state, y=Rambow_SMC)) +
+  geom_point(color = cols_for_heatmap_mel[rownames(intermediate_for_correlations)]) + 
+  geom_text_repel(label=rownames(intermediate_for_correlations), color = cols_for_heatmap_mel[rownames(intermediate_for_correlations)]) +
+  geom_smooth(method=lm, linetype="dashed", color="black", alpha=0.1, size=0.5, fullrange=TRUE) +
+  stat_cor(method = "spearman", label.x.npc = "center")
+
+dev.off()
+```

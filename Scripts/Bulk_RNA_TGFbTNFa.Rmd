@@ -1,0 +1,61 @@
+---
+title: "Bulk RNAseq TGFb/TNFa"
+---
+
+# setup
+```{r}
+library(DESeq2)
+library(qusage)
+library(dplyr)
+library(ggrepel)
+library(AUCell)
+library(GSEABase)
+```
+
+######################################
+#Newest melanoma data (mapped by Katina)
+#######################################
+#finalcounts.RData contains 4 R objects:
+#allcounts       -> counts per sequencing run (210 samples)
+#meta_manual     -> the manually annotated metadata table including mapping/counting quality
+#counts_combined -> counts summed for resequenced libs (117)
+#meta_combined   -> metadata corresponding to counts_combined
+
+```{r}
+load("/media/lcb1/lcb/jwout/Data_Analyses/Git_Analyses/Rstudio/Bulk_RNA/20180398_Final_bulk_RNAs/Data_Katina/MelanomaBulkCombined/finalcounts.RData", verbose=T)
+
+counts_final <- counts_combined[,-1]
+rownames(counts_final) <- counts_combined[,1]
+counts_final
+
+colnames(counts_final)
+
+counts_TGFbTNFa <- counts_final[,c("MM074_Control_for_TGF_TNF_HiSeq4000_20170609", "MM074_TGF_TNF_HiSeq4000_20170609", "MM087_Control_for_TGF_TNF_HiSeq4000_20170609", "MM087_TGF_TNF_HiSeq4000_20170609", "MM057_Control_for_TGF_TNF_HiSeq4000_20170609", "MM057_TGF_TNF_HiSeq4000_20170609")]
+
+dim(counts_TGFbTNFa)
+colnames(counts_TGFbTNFa)
+
+coldesign_1 <-data.frame(c("Control", "TGFbTNFa", "Control", "TGFbTNFa","Control", "TGFbTNFa"))
+coldesign_2 <-data.frame(c("MM074", "MM074", "MM087", "MM087", "MM057", "MM057"))
+coldesign <- cbind(coldesign_1, coldesign_2)
+colnames(coldesign)<-c("Treatment", "MMline")
+Design<-coldesign
+coldesign
+dds_TGFbTNFa_72h_MF <-DESeqDataSetFromMatrix(countData=counts_TGFbTNFa, colData=coldesign , design= formula(~ MMline + Treatment))
+dds_TGFbTNFa_72h_MF<-DESeq(dds_TGFbTNFa_72h_MF)
+res_TGFbTNFa_72h_MF<-results(dds_TGFbTNFa_72h_MF, contrast=c("Treatment","TGFbTNFa","Control"))
+write.table(res_TGFbTNFa_72h_MF,file="TGFbTNFa_vs_Ctrl_72h_MF",sep="\t",quote=F)
+
+head(res_TGFbTNFa_72h_MF[order(-res_TGFbTNFa_72h_MF$log2FoldChange),], 30)
+head(res_TGFbTNFa_72h_MF[order(res_TGFbTNFa_72h_MF$log2FoldChange),], 30)
+
+summary(res_TGFbTNFa_72h_MF)
+
+dim(subset(res_TGFbTNFa_72h_MF, padj<0.05 & log2FoldChange<0))
+rownames(subset(res_TGFbTNFa_72h_MF, padj<0.05 & log2FoldChange<0))
+
+dim(subset(res_TGFbTNFa_72h_MF, padj<0.05 & log2FoldChange>0))
+rownames(subset(res_TGFbTNFa_72h_MF, padj<0.05 & log2FoldChange>0))
+
+```
+
