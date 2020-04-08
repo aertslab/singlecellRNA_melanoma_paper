@@ -1,7 +1,8 @@
 ## Scripts related to the manuscript
 
 ### single cell migration
-single_cell_migration.Rmd
+#### 
+	single_cell_migration.Rmd
 
 ### scRNA-seq Data 10x
 	#### CellRanger 
@@ -31,7 +32,7 @@ single_cell_migration.Rmd
 	get_regulons_from_pyscenic_table.R
 		
 	#### make data base with AUCell rankings for each 10x subset
-    make_AUCell_ranking_db.R
+	make_AUCell_ranking_db.R
 
 	#### filter regulons from 100 scenic runs (per 10x subset)
 	filter_regulons.R
@@ -46,9 +47,9 @@ single_cell_migration.Rmd
 	filter_regulons_to_network.R
 	
 	#### special selection 10 baselines regulons
-    ten_baselines_selected_regulons_aucell_heatmap_and_violinplots.R
+	ten_baselines_selected_regulons_aucell_heatmap_and_violinplots.R
 	
-    #### UMAP on AUCell values filtered regulons
+	#### UMAP on AUCell values filtered regulons
 	calculate_aucell_umaps.R
 	
 	#### calculate AUCell scores on public gene signatures subset 10 baselines
@@ -81,14 +82,16 @@ single_cell_migration.Rmd
 	MM-GSE72056_pySCENIC.txt
 
 ### bulk RNA-seq
-  bulk_RNAseq_map_count.sh
-  Bulk_RNA_new_MMlines.Rmd
-  Bulk_RNA_TGFbTNFa.Rmd
-  Bulk_RNA_THZ2.Rmd
-  Bulk_RNA_KDs.Rmd
+  ####
+  	bulk_RNAseq_map_count.sh
+	Bulk_RNA_new_MMlines.Rmd
+  	Bulk_RNA_TGFbTNFa.Rmd
+  	Bulk_RNA_THZ2.Rmd
+  	Bulk_RNA_KDs.Rmd
 
-### OmniATAC
-  omni_atac_peak_calling.sh
-  link_atac_peaks_to_genes.R
-  ATAC_with_AC_hg19_500bp.sh
+### OmniATAC-seq
+  ####
+  	omni_atac_peak_calling.sh
+  	link_atac_peaks_to_genes.R
+  	ATAC_with_AC_hg19_500bp.sh
 
