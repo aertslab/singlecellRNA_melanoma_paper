@@ -28,13 +28,6 @@
 	#### running pySCENIC
 	Melanoma_pySCENIC_100x_Scripts_new_trk.Rmd
 	
-	**Containerized pySCENIC**
-	To enable a fast and reproducible, end-to-end, motif- and track-based SCENIC analysis (alongside standard best practices steps), we now provide the necessary software as Docker and Singularity containers with a Nextflow pipeline management:
-
-	- [vsn-pipelines GitHub](https://github.com/vib-singlecell-nf/vsn-pipelines).
-	- [vsn-pipelines Documentation](https://vsn-pipelines.readthedocs.io/en/latest/).
-	- (Or [Van de Sande, Flerin et al., *in press*](https://github.com/aertslab/SCENICprotocol).)
-	
 	#### get the regulons for each of the 100 runs (motif and track regulons separately)
 	get_regulons_from_pyscenic_table.R
 		
